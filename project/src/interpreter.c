@@ -23,6 +23,7 @@ int set(char *var, char *value);
 int print(char *var);
 int source(char *script);
 int badcommandFileDoesNotExist();
+int echo(char *input);
 
 // Interpret commands and their arguments
 int interpreter(char *command_args[], int args_size) {
@@ -64,6 +65,11 @@ int interpreter(char *command_args[], int args_size) {
             return badcommand();
         return source(command_args[1]);
 
+    } else if (strcmp(command_args[0], "echo") == 0){
+        if (args_size != 2)
+            return badcommand();
+        return echo(command_args[1]);
+        
     } else
         return badcommand();
 }
@@ -128,4 +134,25 @@ int source(char *script) {
     fclose(p);
 
     return errCode;
+}
+
+int echo(char *input){
+    if (input[0] == '$'){ 
+        // the user is trying to print a variable
+        char var[100];
+        size_t len = strlen(input);
+        int i;
+        for (i = 0; i+1 < len; i++)
+            var[i] = input[i + 1];// Get the variable's name
+        var[i] = '\0'; // null-terminate
+        
+        return print(var);
+    } 
+    else {
+        printf("%s\n", input);
+        return 0;
+    }
+    
+
+
 }
