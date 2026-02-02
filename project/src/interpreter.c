@@ -3,6 +3,9 @@
 #include <string.h>
 #include "shellmemory.h"
 #include "shell.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
 
 int MAX_ARGS_SIZE = 3;
 
@@ -17,6 +20,7 @@ int badcommandFileDoesNotExist() {
     return 3;
 }
 
+// Available Functions
 int help();
 int quit();
 int set(char *var, char *value);
@@ -24,6 +28,10 @@ int print(char *var);
 int source(char *script);
 int badcommandFileDoesNotExist();
 int echo(char *input);
+int my_ls(); // Long-ass function
+int my_mkdir(char *dirname); // Long-ass function
+int my_touch(char *filename);
+int my_cd(char *dirname);
 
 // Interpret commands and their arguments
 int interpreter(char *command_args[], int args_size) {
@@ -69,6 +77,11 @@ int interpreter(char *command_args[], int args_size) {
         if (args_size != 2)
             return badcommand();
         return echo(command_args[1]);
+        
+    } else if (strcmp(command_args[0], "my_touch") == 0){
+        if (args_size != 2)
+            return badcommand();
+        return my_touch(command_args[1]);
         
     } else
         return badcommand();
@@ -158,5 +171,37 @@ int echo(char *input){
         printf("%s\n", input);
         return 0;
     }
+    
 }
 
+int my_touch(char *filename){
+    // Need to check if filename already exists
+    struct dirent* dirp;
+    DIR *dir = opendir("."); // Open the directory
+    while ((dirp=readdir(dir))) // if dirp is null, there's no more content to read
+    {
+        if (strcmp(filename, dirp->d_name)==0){ // File already exists, return
+            closedir(dir); // close the handle (pointer)
+            return 0;
+        }
+    }
+    closedir(dir); // close the handle (pointer)
+    
+    // File permissions: rwxr-xr-x
+	int fd = creat(filename, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+    if (fd < 0){
+        // Failure... no specification
+        return -1;
+    } 
+    return 0;
+}
+
+int my_cd(char *dirname){
+    /* Changes current directory to directory dirname, inside the current directory. If
+    dirname does not exist inside the current directory, my_cd displays “Bad command: my_cd” and stays
+    inside the current directory. dirname should be an alphanumeric string. */
+    
+    
+    
+    return 0; 
+}
