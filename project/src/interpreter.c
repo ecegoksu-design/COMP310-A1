@@ -143,16 +143,20 @@ int echo(char *input){
         size_t len = strlen(input);
         int i;
         for (i = 0; i+1 < len; i++)
-            var[i] = input[i + 1];// Get the variable's name
+            var[i] = input[i + 1]; // Get the variable's name
         var[i] = '\0'; // null-terminate
-        
-        return print(var);
+
+        char *value = mem_get_value(var);
+        if (strcmp(value, "Variable does not exist") == 0) {
+            printf("\n");
+        } else {
+            printf("%s\n", value);
+        }
+        return 0;
     } 
     else {
         printf("%s\n", input);
         return 0;
     }
-    
-
-
 }
+
