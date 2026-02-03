@@ -1,3 +1,4 @@
+## By Arda Kaan Yıldırım (261164821) and Ece Göksu (261138642)
 # Assignment Overview
 The project implements a shell. The shell supports interactive commands specified below. 
 
