@@ -1,8 +1,8 @@
 #!/bin/bash
 
-
-# You can run this script from the src with: ./test_all.sh
 echo "===Starting mysh==="
+
+cd ../src || exit 1
 make clean
 make mysh
 
@@ -14,7 +14,7 @@ total=${#tests[@]}
 
 for test in "${tests[@]}"; do
     echo -n "Testing $test... "
-    
+
     ../src/mysh < "$test.txt" > temp_output.txt
 
     if diff -iw temp_output.txt "${test}_result.txt" > /dev/null; then
@@ -26,13 +26,13 @@ for test in "${tests[@]}"; do
         diff -iw temp_output.txt "${test}_result.txt"
     fi
 
-	echo "**********************"
+    echo "**********************"
     rm -f temp_output.txt
 done
 
 echo "Passed: $passed/$total"
 echo "Failed: $((total - passed))/$total"
 
-echo -e "===Making clean==="
+echo "===Making clean==="
 cd ../src || exit 1
 make clean
