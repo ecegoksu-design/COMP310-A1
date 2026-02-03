@@ -46,23 +46,33 @@ int wordEnding(char c) {
     return c == '\0' || c == '\n' || c == ' ';
 }
 
-int parseInput(char inp[]) {
-    char tmp[200], *words[100];                            
-    int ix = 0, w = 0;
-    int wordlen;
-    int errorCode;
-    for (ix = 0; inp[ix] == ' ' && ix < 1000; ix++); // skip white spaces
-    while (inp[ix] != '\n' && inp[ix] != '\0' && ix < 1000) {
-        // extract a word
-        for (wordlen = 0; !wordEnding(inp[ix]) && ix < 1000; ix++, wordlen++) {
-            tmp[wordlen] = inp[ix];                        
+int parseInput(char input[]) {
+    char *command;
+    char *rest = input;
+    int errorCode = 0;
+
+    while ((command = strtok_r(rest, ";", &rest))) {
+
+        char temp[200], *words[100];
+        int index = 0, w = 0, wordlength;
+        while (command[index] == ' ') index++;
+        while (command[index] != '\0' && command[index] != '\n') {
+            for (wordlength = 0; !wordEnding(command[index]); index++, wordlength++) {
+                temp[wordlength] = command[index];
+            }
+            temp[wordlength] = '\0';
+            if (wordlength > 0) {
+                words[w++] = strdup(temp);
+            }
+            if (command[index] == '\0') break;
+            index++;
         }
-        tmp[wordlen] = '\0';
-        words[w] = strdup(tmp);
-        w++;
-        if (inp[ix] == '\0') break;
-        ix++; 
+        if (w > 0) {
+            errorCode = interpreter(words, w);
+        }
+        for (int i = 0; i < w; i++) {
+            free(words[i]);
+        }
     }
-    errorCode = interpreter(words, w);
     return errorCode;
 }
