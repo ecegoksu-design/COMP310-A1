@@ -7,6 +7,9 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <ctype.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 int MAX_ARGS_SIZE = 3;
 
@@ -29,68 +32,63 @@ int print(char *var);
 int source(char *script);
 int badcommandFileDoesNotExist();
 int echo(char *input);
-int my_ls(); // Long-ass function
-int my_mkdir(char *dirname); // Long-ass function
+int my_ls(); 
+int my_mkdir(char *dirname); 
 int my_touch(char *filename);
 int my_cd(char *dirname);
 
 // Interpret commands and their arguments
 int interpreter(char *command_args[], int args_size) {
-    int i;
-
     if (args_size < 1 || args_size > MAX_ARGS_SIZE) {
         return badcommand();
     }
 
-    for (i = 0; i < args_size; i++) {   // terminate args at newlines
+    for (int i = 0; i < args_size; i++) {
         command_args[i][strcspn(command_args[i], "\r\n")] = 0;
     }
 
     if (strcmp(command_args[0], "help") == 0) {
-        //help
-        if (args_size != 1)
-            return badcommand();
+        if (args_size != 1) return badcommand();
         return help();
 
     } else if (strcmp(command_args[0], "quit") == 0) {
-        //quit
-        if (args_size != 1)
-            return badcommand();
+        if (args_size != 1) return badcommand();
         return quit();
 
     } else if (strcmp(command_args[0], "set") == 0) {
-        //set
-        if (args_size != 3)
-            return badcommand();
+        if (args_size != 3) return badcommand();
         return set(command_args[1], command_args[2]);
 
     } else if (strcmp(command_args[0], "print") == 0) {
-        if (args_size != 2)
-            return badcommand();
+        if (args_size != 2) return badcommand();
         return print(command_args[1]);
 
     } else if (strcmp(command_args[0], "source") == 0) {
-        if (args_size != 2)
-            return badcommand();
+        if (args_size != 2) return badcommand();
         return source(command_args[1]);
 
-    } else if (strcmp(command_args[0], "echo") == 0){
-        if (args_size != 2)
-            return badcommand();
+    } else if (strcmp(command_args[0], "echo") == 0) {
+        if (args_size != 2) return badcommand();
         return echo(command_args[1]);
-        
-    } else if (strcmp(command_args[0], "my_touch") == 0){
-        if (args_size != 2)
-            return badcommand();
+
+    } else if (strcmp(command_args[0], "my_ls") == 0) {
+        if (args_size != 1) return badcommand();
+        return my_ls();
+
+    } else if (strcmp(command_args[0], "my_mkdir") == 0) {
+        if (args_size != 2) return badcommand();
+        return my_mkdir(command_args[1]);
+
+    } else if (strcmp(command_args[0], "my_touch") == 0) {
+        if (args_size != 2) return badcommand();
         return my_touch(command_args[1]);
-        
-    } else if (strcmp(command_args[0], "my_cd") == 0){
-        if (args_size != 2)
-            return badcommand();
+
+    } else if (strcmp(command_args[0], "my_cd") == 0) {
+        if (args_size != 2) return badcommand();
         return my_cd(command_args[1]);
-        
-    } else
-        return badcommand();
+    }
+
+    return badcommand();
 }
 
 int help() {
@@ -180,6 +178,85 @@ int echo(char *input){
     
 }
 
+int my_ls(){ 
+    struct dirent* dirp;
+    DIR *dir = opendir(".");
+    char *names[256];
+    int count = 0;
+    int i, j;
+
+    if (dir == NULL) {
+        return 0;
+    }
+
+    while ((dirp = readdir(dir))) {
+        names[count++] = strdup(dirp->d_name);
+    }
+    closedir(dir);
+
+    // Sort directory entries
+    for (i = 0; i < count - 1; i++) {
+        for (j = 0; j < count - i - 1; j++) {
+            if (strcmp(names[j], names[j + 1]) > 0) {
+                char *tmp = names[j];
+                names[j] = names[j + 1];
+                names[j + 1] = tmp;
+            }
+        }
+    }
+
+    for (i = 0; i < count; i++) {
+        printf("%s\n", names[i]);
+        free(names[i]);
+    }
+
+    return 0;
+}
+
+int my_mkdir(char *dirname){ 
+    char name[100];
+    int i;
+
+    if (dirname[0] == '$') {
+        char *value = mem_get_value(dirname + 1);
+
+        if (strcmp(value, "Variable does not exist") == 0) {
+            printf("Bad command: my_mkdir\n");
+            return 0;
+        }
+
+        for (i = 0; value[i]; i++) {
+            if (!isalnum(value[i])) {
+                printf("Bad command: my_mkdir\n");
+                return 0;
+            }
+        }
+
+        strcpy(name, value);
+        free(value);
+    }
+    else {
+        for (i = 0; dirname[i]; i++) {
+            if (!isalnum(dirname[i])) {
+                printf("Bad command: my_mkdir\n");
+                return 0;
+            }
+        }
+
+        strcpy(name, dirname);
+    }
+
+    // Attempt to create directory
+    if (mkdir(name, 0755) != 0) {
+        if (errno != EEXIST) {
+            printf("Bad command: my_mkdir\n");
+        }
+        return 0;
+    }
+
+    return 0;
+}
+
 int my_touch(char *filename){
     // Need to check if filename already exists
     struct dirent* dirp;
@@ -220,5 +297,5 @@ int my_cd(char *dirname){
     // File not found
     closedir(dir);
     printf("Bad command: my_cd\n");    
-    return -1; 
+    return 0;    
 }
