@@ -213,7 +213,6 @@ int my_cd(char *dirname){
     {
         if (strcmp(dirname, dirp->d_name)==0){ // directory found, cd
             chdir(dirname);
-            printf("Changed dir");
             closedir(dir);
             return 0;
         }
