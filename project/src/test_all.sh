@@ -26,6 +26,7 @@ for test in "${tests[@]}"; do
         diff -iw temp_output.txt "${test}_result.txt"
     fi
 
+	echo "**********************"
     rm -f temp_output.txt
 done
 

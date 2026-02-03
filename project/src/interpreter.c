@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <errno.h>
 
 int MAX_ARGS_SIZE = 3;
 
@@ -82,6 +83,11 @@ int interpreter(char *command_args[], int args_size) {
         if (args_size != 2)
             return badcommand();
         return my_touch(command_args[1]);
+        
+    } else if (strcmp(command_args[0], "my_cd") == 0){
+        if (args_size != 2)
+            return badcommand();
+        return my_cd(command_args[1]);
         
     } else
         return badcommand();
@@ -201,7 +207,19 @@ int my_cd(char *dirname){
     dirname does not exist inside the current directory, my_cd displays “Bad command: my_cd” and stays
     inside the current directory. dirname should be an alphanumeric string. */
     
-    
-    
-    return 0; 
+    struct dirent* dirp;
+    DIR *dir = opendir("."); // Open the directory
+    while ((dirp=readdir(dir))) // if dirp is null, there's no more content to read
+    {
+        if (strcmp(dirname, dirp->d_name)==0){ // directory found, cd
+            chdir(dirname);
+            printf("Changed dir");
+            closedir(dir);
+            return 0;
+        }
+    }
+    // File not found
+    closedir(dir);
+    printf("Bad command: my_cd\n");    
+    return -1; 
 }
