@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 int MAX_ARGS_SIZE = 3;
 
@@ -36,6 +37,7 @@ int my_ls();
 int my_mkdir(char *dirname); 
 int my_touch(char *filename);
 int my_cd(char *dirname);
+int run(char* commands[], int args_size);
 
 // Interpret commands and their arguments
 int interpreter(char *command_args[], int args_size) {
@@ -86,6 +88,9 @@ int interpreter(char *command_args[], int args_size) {
     } else if (strcmp(command_args[0], "my_cd") == 0) {
         if (args_size != 2) return badcommand();
         return my_cd(command_args[1]);
+    } else if (strcmp(command_args[0], "run") == 0) {
+        if (args_size < 2) return badcommand();
+        return run(command_args, args_size);
     }
 
     return badcommand();
@@ -298,4 +303,28 @@ int my_cd(char *dirname){
     closedir(dir);
     printf("Bad command: my_cd\n");    
     return 0;    
+}
+
+int run(char* commands[], int args_size){
+    pid_t pid = fork();
+    
+    if(pid < 0){
+    // Error
+        return 2; 
+    } else if (pid == 0){
+        // exec
+        char* temp[100];
+        short i;
+        for(i=0; i<args_size-1; i++)
+            temp[i] = commands[i+1]; // copy every word in the input except for the first (run)
+            
+        temp[i] = NULL; // null-terminate the input array
+        execvp(temp[0], temp);
+        exit(1);
+    } else {
+        // Parent
+        wait(0);
+    }
+    
+    return 0;
 }
